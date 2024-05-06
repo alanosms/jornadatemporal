@@ -1,10 +1,13 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 import datetime
 
 app = Flask(__name__)
 
 def calculate_percentages(date):
-    date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    try:
+        date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Please provide the date in 'YYYY-MM-DD' format."}), 400
 
     end_of_year_2024 = datetime.datetime(2024, 12, 31, 23, 59, 59)
 
@@ -38,14 +41,10 @@ def calculate_percentages(date):
         "percentage_of_month_passed": percentage_of_month_passed_formatted
     }
 
-@app.route('/percentages', methods=['GET'])
-def get_percentages():
-    date = request.args.get('date')
-    if date:
-        percentages = calculate_percentages(date)
-        return jsonify(percentages)
-    else:
-        return jsonify({"error": "Please provide a date parameter."})
+@app.route('/percentages/<date>', methods=['GET'])
+def get_percentages(date):
+    percentages = calculate_percentages(date)
+    return jsonify(percentages)
 
 if __name__ == '__main__':
     app.run(debug=True)
